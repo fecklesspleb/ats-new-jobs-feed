@@ -1,0 +1,5 @@
+# One board per line: greenhouse:<board>, lever:<site>, ashby:<board>, or the board URL.
+# With --source apify you can also list Workday, Workable, Recruitee and Teamtailor board URLs.
+greenhouse:airbnb
+lever:spotify
+ashby:ramp

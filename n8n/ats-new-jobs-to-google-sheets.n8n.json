@@ -1,0 +1,378 @@
+{
+  "name": "Daily new jobs from Greenhouse, Lever, Ashby and Workday boards to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Daily new jobs from company career boards to Google Sheets\n\n### How it works\n1. **Every morning at 8** starts the workflow.\n2. **Search settings** holds the career boards, title keywords and a spending cap.\n3. **Run ATS Jobs Scraper** calls the Apify API (run-sync-get-dataset-items) for the fecklesspleb/ats-jobs-scraper Actor. It reads Greenhouse, Lever, Ashby, Workday, Workable, Recruitee and Teamtailor boards. Monitoring mode (onlyNewJobs) returns only jobs it has not returned before, so later runs return and charge only new postings.\n4. **Keep job records** drops the free notes the Actor also writes (unresolved boards, status messages).\n5. **Append or update job rows** writes one row per job, matched on Job ID.\n\n### Setup\n1. Apify: copy your API token from Apify Console > Settings > API & Integrations. Create a **Header Auth** credential named `Apify API` with Name `Authorization` and Value `Bearer YOUR_TOKEN`, and select it in **Run ATS Jobs Scraper**.\n2. Google Sheets: make a sheet whose first row has these headers: Job ID, Company, Title, Location, Work arrangement, Posted, Salary, URL, ATS, First seen. Connect your Google Sheets credential and pick the document and tab in **Append or update job rows**.\n3. Edit **Search settings**: board URLs or `ats:slug` entries, keywords, and `maxUsd`.\n4. Click **Execute workflow** once to test, then activate it.\n\n### Cost\nThe Actor charges $0.002 per job returned. `maxUsd` caps each run (default $0.50).\n\n### Customization tips\n- Use a different `stateStoreName` for each independent search.\n- Add a Gmail or Slack node after **Shape job row** to get the new jobs as a message.",
+        "height": 860,
+        "width": 520
+      },
+      "id": "7c1db829-d7c3-5af5-bd3c-791d696b1102",
+      "name": "Main note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 1. Schedule and settings\nChange the run time, boards, keywords and spending cap here.",
+        "height": 360,
+        "width": 460,
+        "color": 7
+      },
+      "id": "25515c8e-4c98-5d31-9590-b9202520b108",
+      "name": "Section: settings",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 2. Run the Actor\nOne Apify API call per run. maxTotalChargeUsd stops spend at your cap.",
+        "height": 360,
+        "width": 460,
+        "color": 7
+      },
+      "id": "d8c3298a-63db-54d0-b9e1-95366f0904ff",
+      "name": "Section: scrape",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 3. Save to Google Sheets\nKeeps job records only and upserts them by Job ID.",
+        "height": 360,
+        "width": 680,
+        "color": 7
+      },
+      "id": "d6955fb2-348d-52ae-af53-859c1c2142f9",
+      "name": "Section: sheet",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "0337dd09-c88d-560a-8a54-3f5d1ab71752",
+      "name": "Every morning at 8",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8d147a6-552d-59b9-ab19-9ef67b1ef6af",
+              "name": "companies",
+              "value": "[\"https://boards.greenhouse.io/airbnb\", \"https://jobs.lever.co/spotify\", \"ashby:ramp\"]",
+              "type": "array"
+            },
+            {
+              "id": "775f65e0-3226-56a7-b4fb-e0efe766fcbd",
+              "name": "keywords",
+              "value": "[\"engineer\", \"developer\"]",
+              "type": "array"
+            },
+            {
+              "id": "788c3761-5975-5693-98dd-09afe1088c97",
+              "name": "stateStoreName",
+              "value": "n8n-new-jobs",
+              "type": "string"
+            },
+            {
+              "id": "201b4dba-0dde-5668-b866-bb2d4fddc747",
+              "name": "maxUsd",
+              "value": "0.5",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e2a1f3b-c309-5aa8-9c4c-a09d79cf9eed",
+      "name": "Search settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "maxTotalChargeUsd",
+              "value": "={{ $json.maxUsd }}"
+            },
+            {
+              "name": "timeout",
+              "value": "280"
+            },
+            {
+              "name": "clean",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ companies: $json.companies, keywords: $json.keywords, onlyNewJobs: true, stateStoreName: $json.stateStoreName, includeDescription: false, maxTotalJobs: 500 }) }}",
+        "options": {
+          "timeout": 320000
+        }
+      },
+      "id": "469373e4-8e98-586f-87a0-56405527fb3f",
+      "name": "Run ATS Jobs Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a71f7813-8263-52b6-a841-c92ae88f7d0d",
+              "leftValue": "={{ !$json.type && ($json.status === undefined || $json.status === null || $json.status === 'active') && !!$json.uid && !!$json.url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "e4c56eed-72e0-5109-a84c-bee943438151",
+      "name": "Keep job records",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "885c3d8c-bf98-5d05-b88b-67142aa9d240",
+              "name": "Job ID",
+              "value": "={{ $json.uid }}",
+              "type": "string"
+            },
+            {
+              "id": "88c0c85a-2631-5532-a2f7-79ab95f602f1",
+              "name": "Company",
+              "value": "={{ $json.companyName || $json.companySlug }}",
+              "type": "string"
+            },
+            {
+              "id": "f11c36f0-5754-5578-91b4-3b9730e429d7",
+              "name": "Title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "10729068-c9ee-5efb-bd1e-4d3cd84fc6eb",
+              "name": "Location",
+              "value": "={{ ($json.locations || [$json.location]).filter(Boolean).join('; ') }}",
+              "type": "string"
+            },
+            {
+              "id": "dffc6977-b205-55be-8b6c-806aabad1ddd",
+              "name": "Work arrangement",
+              "value": "={{ $json.workArrangement || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "10c9d288-7f8b-58c0-96e2-105b864cf8f4",
+              "name": "Posted",
+              "value": "={{ $json.postedAt ? String($json.postedAt).slice(0, 10) : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f34285c0-8b61-511d-a193-8dfc77c33307",
+              "name": "Salary",
+              "value": "={{ $json.salaryText || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "4d6eb44c-e08f-54d4-b4f9-de7acbbc7b11",
+              "name": "URL",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "b141efae-b6e2-5aa4-9ec1-addbed3c336e",
+              "name": "ATS",
+              "value": "={{ $json.ats }}",
+              "type": "string"
+            },
+            {
+              "id": "b74a95fd-ebed-525b-9def-a6e412b34b69",
+              "name": "First seen",
+              "value": "={{ $json.firstSeenAt ? String($json.firstSeenAt).slice(0, 10) : $now.toISODate() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "05460a91-53b3-565d-9793-f951e3a7c68b",
+      "name": "Shape job row",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1180,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": ""
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Job ID"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "71ca2254-28bc-56b6-92de-6f529d7f0b30",
+      "name": "Append or update job rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1400,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Every morning at 8": {
+      "main": [
+        [
+          {
+            "node": "Search settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search settings": {
+      "main": [
+        [
+          {
+            "node": "Run ATS Jobs Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run ATS Jobs Scraper": {
+      "main": [
+        [
+          {
+            "node": "Keep job records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep job records": {
+      "main": [
+        [
+          {
+            "node": "Shape job row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape job row": {
+      "main": [
+        [
+          {
+            "node": "Append or update job rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

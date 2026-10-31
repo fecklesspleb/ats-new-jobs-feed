@@ -1,0 +1,46 @@
+{
+ "jobs": [
+  {
+   "id": 8306554,
+   "title": "AirCover Specialist, Claims Experience",
+   "company_name": "Airbnb",
+   "absolute_url": "https://careers.airbnb.com/positions/8306554?gh_jid=8306554",
+   "first_published": "2026-10-28T10:52:05-04:00",
+   "updated_at": "2026-10-28T10:52:05-04:00",
+   "location": {
+    "name": "Canada"
+   },
+   "requisition_id": "ONE",
+   "internal_job_id": 3591434
+  },
+  {
+   "id": 7789554,
+   "title": "Associate Legal Counsel, Japan",
+   "company_name": "Airbnb",
+   "absolute_url": "https://careers.airbnb.com/positions/7789554?gh_jid=7789554",
+   "first_published": "2026-04-13T04:49:05-04:00",
+   "updated_at": "2026-09-29T20:00:54-04:00",
+   "location": {
+    "name": "Tokyo, Japan"
+   },
+   "requisition_id": "ONE",
+   "internal_job_id": 3407102
+  },
+  {
+   "id": 8231416,
+   "title": "Associate Principal, Procurement Innovation Supplier Programs",
+   "company_name": "Airbnb",
+   "absolute_url": "https://careers.airbnb.com/positions/8231416?gh_jid=8231416",
+   "first_published": "2026-09-24T18:17:39-04:00",
+   "updated_at": "2026-09-29T20:00:54-04:00",
+   "location": {
+    "name": "United States "
+   },
+   "requisition_id": "ONE",
+   "internal_job_id": 3562002
+  }
+ ],
+ "meta": {
+  "total": 3
+ }
+}

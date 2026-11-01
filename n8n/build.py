@@ -1,4 +1,4 @@
-"""Builds ats-new-jobs-to-google-sheets.n8n.json. Edit here, then run: python3 build.py"""
+"""Builds ats-new-jobs-to-csv.n8n.json. Edit here, then run: python3 build.py"""
 import json
 import uuid
 
@@ -11,27 +11,18 @@ def nid(name):
 
 ACTOR_URL = "https://api.apify.com/v2/acts/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items"
 
-MAIN_NOTE = """## Daily new jobs from company career boards to Google Sheets
-
-### How it works
-1. **Every morning at 8** starts the workflow.
-2. **Search settings** holds the career boards, title keywords and a spending cap.
-3. **Run ATS Jobs Scraper** calls the Apify API (run-sync-get-dataset-items) for the fecklesspleb/ats-jobs-scraper Actor. It reads Greenhouse, Lever, Ashby, Workday, Workable, Recruitee and Teamtailor boards. Monitoring mode (onlyNewJobs) returns only jobs it has not returned before, so later runs return and charge only new postings.
-4. **Keep job records** drops the free notes the Actor also writes (unresolved boards, status messages).
-5. **Append or update job rows** writes one row per job, matched on Job ID.
+MAIN_NOTE = """### How it works
+For job seekers, recruiters and researchers who track hiring at specific companies. Every morning at 8 the workflow asks the Apify Actor fecklesspleb/ats-jobs-scraper for jobs on the career boards you list (Greenhouse, Lever, Ashby, Workday, Workable, Recruitee, Teamtailor). Monitoring mode (onlyNewJobs) returns only jobs it has not returned before. A filter drops the Actor's free status records, **Skip jobs already saved** drops any Job ID this workflow has written before, and the new jobs are saved as a CSV file named `new_jobs_YYYY-MM-DD_HHmmss.csv`. The file needs no credential. A run with no new jobs writes no file.
 
 ### Setup
-1. Apify: copy your API token from Apify Console > Settings > API & Integrations. Create a **Header Auth** credential named `Apify API` with Name `Authorization` and Value `Bearer YOUR_TOKEN`, and select it in **Run ATS Jobs Scraper**.
-2. Google Sheets: make a sheet whose first row has these headers: Job ID, Company, Title, Location, Work arrangement, Posted, Salary, URL, ATS, First seen. Connect your Google Sheets credential and pick the document and tab in **Append or update job rows**.
-3. Edit **Search settings**: board URLs or `ats:slug` entries, keywords, and `maxUsd`.
-4. Click **Execute workflow** once to test, then activate it.
+1. Copy your Apify API token from Apify Console > Settings > API & Integrations. In n8n create a **Header Auth** credential: Name `Authorization`, Value `Bearer ` followed by your token. Select it in **Run ATS Jobs Scraper**.
+2. In **Search settings**, set `companies` (board URLs or `ats:slug`), `keywords` (title words), `maxUsd` (spending cap per run) and `outputFolder`. n8n 2.x writes files only inside allowed folders: `/home/node/.n8n-files` is the default in the official Docker image; elsewhere use a folder listed in `N8N_RESTRICT_FILE_ACCESS_TO`.
+3. Click **Execute workflow**, open the CSV, then activate.
 
-### Cost
-The Actor charges $0.002 per job returned. `maxUsd` caps each run (default $0.50).
+Disclosure: fecklesspleb built this template and the paid Actor it calls ($0.002 per job returned). `maxUsd` is sent as `maxTotalChargeUsd`, which stops the run at your cap. Runs longer than 300 seconds return HTTP 408 to n8n while continuing on Apify, so keep each workflow to a few dozen boards. Built on n8n 2.45.4.
 
-### Customization tips
-- Use a different `stateStoreName` for each independent search.
-- Add a Gmail or Slack node after **Shape job row** to get the new jobs as a message."""
+### Customization
+You can replace the two file nodes with Google Sheets, a database or a webhook node; only the CSV output is tested. Use a different `stateStoreName` for each separate search."""
 
 
 def sticky(name, content, x, y, w, h, color=None):
@@ -48,12 +39,14 @@ def assignment(name, value, typ):
 
 nodes = [
     sticky("Main note", MAIN_NOTE, -620, -260, 520, 860),
-    sticky("Section: settings", "### 1. Schedule and settings\nChange the run time, boards, keywords and spending cap here.",
+    sticky("Section: settings", "## Schedule and settings\nChange the run time, boards, keywords and spending cap here.",
            -60, -60, 460, 360, 7),
-    sticky("Section: scrape", "### 2. Run the Actor\nOne Apify API call per run. maxTotalChargeUsd stops spend at your cap.",
+    sticky("Section: scrape", "## Fetch new jobs from Apify\nOne API call per run. maxTotalChargeUsd stops spending at your cap.",
            420, -60, 460, 360, 7),
-    sticky("Section: sheet", "### 3. Save to Google Sheets\nKeeps job records only and upserts them by Job ID.",
+    sticky("Section: new", "## Keep only new jobs\nDrops status records, then any Job ID this workflow saved in an earlier run.",
            900, -60, 680, 360, 7),
+    sticky("Section: csv", "## Save as CSV\nOne dated file per run with new jobs. No credential needed.",
+           1600, -60, 480, 360, 7),
     {
         "parameters": {"rule": {"interval": [{"triggerAtHour": 8}]}},
         "id": nid("Every morning at 8"), "name": "Every morning at 8",
@@ -66,6 +59,7 @@ nodes = [
                 assignment("keywords", '["engineer", "developer"]', "array"),
                 assignment("stateStoreName", "n8n-new-jobs", "string"),
                 assignment("maxUsd", "0.5", "number"),
+                assignment("outputFolder", "/home/node/.n8n-files", "string"),
             ]},
             "options": {},
         },
@@ -131,23 +125,35 @@ nodes = [
     },
     {
         "parameters": {
-            "operation": "appendOrUpdate",
-            "documentId": {"__rl": True, "value": "", "mode": "list", "cachedResultName": ""},
-            "sheetName": {"__rl": True, "value": "", "mode": "list", "cachedResultName": ""},
-            "columns": {"mappingMode": "autoMapInputData", "value": {}, "matchingColumns": ["Job ID"], "schema": []},
+            "operation": "removeItemsSeenInPreviousExecutions",
+            "dedupeValue": "={{ $json['Job ID'] }}",
+            "options": {"scope": "workflow", "historySize": 10000},
+        },
+        "id": nid("Skip jobs already saved"), "name": "Skip jobs already saved",
+        "type": "n8n-nodes-base.removeDuplicates", "typeVersion": 2, "position": [1400, 100],
+    },
+    {
+        "parameters": {"operation": "csv", "options": {"headerRow": True}},
+        "id": nid("Convert to CSV"), "name": "Convert to CSV",
+        "type": "n8n-nodes-base.convertToFile", "typeVersion": 1.1, "position": [1700, 100],
+    },
+    {
+        "parameters": {
+            "operation": "write",
+            "fileName": "={{ $('Search settings').first().json.outputFolder.replace(/\\/$/, '') }}/new_jobs_{{ $now.toFormat('yyyy-MM-dd_HHmmss') }}.csv",
             "options": {},
         },
-        "id": nid("Append or update job rows"), "name": "Append or update job rows",
-        "type": "n8n-nodes-base.googleSheets", "typeVersion": 4.7, "position": [1400, 100],
+        "id": nid("Write CSV file"), "name": "Write CSV file",
+        "type": "n8n-nodes-base.readWriteFile", "typeVersion": 1, "position": [1920, 100],
     },
 ]
 
 chain = ["Every morning at 8", "Search settings", "Run ATS Jobs Scraper", "Keep job records",
-         "Shape job row", "Append or update job rows"]
+         "Shape job row", "Skip jobs already saved", "Convert to CSV", "Write CSV file"]
 connections = {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(chain, chain[1:])}
 
 wf = {
-    "name": "Daily new jobs from Greenhouse, Lever, Ashby and Workday boards to Google Sheets",
+    "name": "Daily new jobs from Greenhouse, Lever, Ashby and Workday boards to a CSV file",
     "nodes": nodes,
     "connections": connections,
     "pinData": {},
@@ -157,7 +163,7 @@ wf = {
 }
 
 if __name__ == "__main__":
-    with open("ats-new-jobs-to-google-sheets.n8n.json", "w", encoding="utf-8") as f:
+    with open("ats-new-jobs-to-csv.n8n.json", "w", encoding="utf-8") as f:
         json.dump(wf, f, indent=2, ensure_ascii=False)
         f.write("\n")
-    print("wrote ats-new-jobs-to-google-sheets.n8n.json,", len(nodes), "nodes")
+    print("wrote ats-new-jobs-to-csv.n8n.json,", len(nodes), "nodes")

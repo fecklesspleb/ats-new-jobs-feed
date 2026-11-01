@@ -107,7 +107,7 @@ If you only need one ATS, the [Greenhouse](https://apify.com/fecklesspleb/greenh
 
 ## n8n version
 
-`n8n/` holds the same idea as an n8n workflow: a schedule, one HTTP Request to the Actor, a filter, and an upsert into Google Sheets keyed on Job ID. See `n8n/README.md`.
+`n8n/` holds the same idea as an n8n workflow: a schedule, one HTTP Request to the Actor, a filter, a Remove Duplicates step keyed on Job ID, and a dated CSV file with the new jobs (no Google credential needed; the Apify token is the only credential). See `n8n/README.md`.
 
 ## Tests
 

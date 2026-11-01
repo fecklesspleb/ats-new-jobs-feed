@@ -1,11 +1,11 @@
 """Offline test copy of the template: schedule -> manual trigger, Apify URL -> local mock server,
-credential -> plain header, Google Sheets -> NoOp. Usage: make_test_variant.py OUT.json PORT"""
+credential -> plain header, outputFolder -> OUT_DIR. Usage: make_test_variant.py OUT.json PORT OUT_DIR"""
 import json
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-wf = json.loads((HERE.parent / "ats-new-jobs-to-google-sheets.n8n.json").read_text())
+wf = json.loads((HERE.parent / "ats-new-jobs-to-csv.n8n.json").read_text())
 wf["name"] = "TEST " + wf["name"]
 wf["id"] = "TestNewJobsHttp1"
 for n in wf["nodes"]:
@@ -18,6 +18,8 @@ for n in wf["nodes"]:
         p.pop("genericAuthType")
         p["sendHeaders"] = True
         p["headerParameters"] = {"parameters": [{"name": "Authorization", "value": "Bearer test-token"}]}
-    elif t.endswith("googleSheets"):
-        n.update(type="n8n-nodes-base.noOp", typeVersion=1, parameters={})
+    elif n["name"] == "Search settings":
+        for a in p["assignments"]["assignments"]:
+            if a["name"] == "outputFolder":
+                a["value"] = sys.argv[3]
 Path(sys.argv[1]).write_text(json.dumps(wf, indent=1))

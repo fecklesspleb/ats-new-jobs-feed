@@ -144,7 +144,7 @@ class ApifySource(unittest.TestCase):
                     "--out-dir", str(d / "data"), "--keyword", "engineer", "--max-usd", "0.25"]
             self.assertEqual(new_jobs.main(args, fetch=fake, now=NOW), 0)
             call = fake.calls[0]
-            self.assertIn("/acts/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items?", call["url"])
+            self.assertIn("/actors/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items?", call["url"])
             self.assertIn("maxTotalChargeUsd=0.25", call["url"])
             self.assertEqual(call["headers"]["Authorization"], "Bearer test-token")
             self.assertNotIn("test-token", call["url"])

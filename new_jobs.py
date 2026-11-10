@@ -190,7 +190,7 @@ def actor_input(companies, keywords, only_new=True, state_store="ats-new-jobs-fe
 
 def run_actor(body: dict, token: str, max_usd: float, actor: str = APIFY_ACTOR, fetch=http_json) -> list[dict]:
     qs = urllib.parse.urlencode({"maxTotalChargeUsd": max_usd, "timeout": 280, "clean": "true"})
-    url = f"{APIFY_BASE}/acts/{actor}/run-sync-get-dataset-items?{qs}"
+    url = f"{APIFY_BASE}/actors/{actor}/run-sync-get-dataset-items?{qs}"
     items = fetch(
         url,
         data=json.dumps(body).encode(),

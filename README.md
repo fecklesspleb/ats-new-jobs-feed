@@ -89,6 +89,9 @@ The token is sent in the `Authorization` header, never in the URL. The run is ca
 
 GitHub disables scheduled workflows in public repositories after 60 days with no repository activity, and scheduled workflows are off by default in a fork. The workflow commits only when the CSVs change (a day with new jobs, or the first quiet day after one), so a quiet watch list can switch itself off; check the Actions tab now and then.
 
+**Want it in Google Sheets instead?** See [fecklesspleb/ats-jobs-google-sheet](https://github.com/fecklesspleb/ats-jobs-google-sheet) for a copy-paste Apps Script that appends new jobs to a sheet every morning.
+
+
 ## What a run costs
 
 `public` source: nothing. The script makes one request per board, and GitHub Actions minutes are free for public repositories on standard runners.

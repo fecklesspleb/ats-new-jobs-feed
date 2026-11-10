@@ -8,7 +8,7 @@ File: `ats-new-jobs-to-csv.n8n.json` (import it with **Workflows > Import from f
 
 1. **Every morning at 8** (Schedule Trigger).
 2. **Search settings** (Edit Fields): `companies`, `keywords`, `stateStoreName`, `maxUsd`, `outputFolder`.
-3. **Run ATS Jobs Scraper** (HTTP Request): `POST https://api.apify.com/v2/acts/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items?maxTotalChargeUsd=<maxUsd>&timeout=280&clean=true` with the body `{companies, keywords, onlyNewJobs: true, stateStoreName, includeDescription: false, maxTotalJobs: 500}`. The response is a JSON array, which n8n turns into one item per record.
+3. **Run ATS Jobs Scraper** (HTTP Request): `POST https://api.apify.com/v2/actors/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items?maxTotalChargeUsd=<maxUsd>&timeout=280&clean=true` with the body `{companies, keywords, onlyNewJobs: true, stateStoreName, includeDescription: false, maxTotalJobs: 500}`. The response is a JSON array, which n8n turns into one item per record.
 4. **Keep job records** (Filter): drops the Actor's free non-job records (boards that could not be resolved, status messages) and keeps records with a `uid` and `url`.
 5. **Shape job row** (Edit Fields): Job ID, Company, Title, Location, Work arrangement, Posted, Salary, URL, ATS, First seen.
 6. **Skip jobs already saved** (Remove Duplicates, "Remove Items Processed in Previous Executions", scope Workflow, keyed on Job ID, history 10,000 IDs): a second guard on top of the Actor's `onlyNewJobs`. n8n keeps the seen IDs in its own database (`processed_data` table), so they survive restarts.

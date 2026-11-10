@@ -9,7 +9,7 @@ def nid(name):
     return str(uuid.uuid5(NS, name))
 
 
-ACTOR_URL = "https://api.apify.com/v2/acts/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items"
+ACTOR_URL = "https://api.apify.com/v2/actors/fecklesspleb~ats-jobs-scraper/run-sync-get-dataset-items"
 
 MAIN_NOTE = """### How it works
 For job seekers, recruiters and researchers who track hiring at specific companies. Every morning at 8 the workflow asks the Apify Actor fecklesspleb/ats-jobs-scraper for jobs on the career boards you list (Greenhouse, Lever, Ashby, Workday, Workable, Recruitee, Teamtailor). Monitoring mode (onlyNewJobs) returns only jobs it has not returned before. A filter drops the Actor's free status records, **Skip jobs already saved** drops any Job ID this workflow has written before, and the new jobs are saved as a CSV file named `new_jobs_YYYY-MM-DD_HHmmss.csv`. The file needs no credential. A run with no new jobs writes no file.

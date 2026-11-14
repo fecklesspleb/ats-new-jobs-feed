@@ -128,6 +128,15 @@ The offline tests never touch the network or Apify. They check board parsing, fi
 - The Apify sync endpoint waits at most 300 seconds. If a run takes longer you get HTTP 408 (the run keeps going on Apify); list fewer boards per run.
 - Only boards you list are checked. This is not a search engine across companies.
 
+## Hosted options
+
+The scripts in this repository stay free and MIT-licensed. The hosted versions below are paid per result, run on your own Apify account, and I maintain the scripts and the hosted versions.
+
+- [Workday Jobs Scraper](https://apify.com/fecklesspleb/workday-jobs-scraper) — any Workday career site (myworkdayjobs.com or myworkdaysite.com), which the free public source does not cover. Pay per event, $0.002 per job ($2.00 per 1,000 jobs).
+- [Career Site Jobs Feed](https://apify.com/fecklesspleb/career-site-jobs-feed) — a built-in directory of 692 boards, or your own list, on Greenhouse, Lever, Ashby, Workable, Recruitee and Teamtailor. Pay per event, $0.002 per job posting ($2.00 per 1,000 job postings).
+- [ATS Jobs Scraper](https://apify.com/fecklesspleb/ats-jobs-scraper) — the Actor this repo's optional `apify` source already calls. Adds Workday, Workable, Recruitee, Teamtailor, Polymer and HireHive (nine ATS in all) in one schema. Pay per event, $0.002 per job ($2.00 per 1,000 jobs).
+- [Remote Jobs Aggregator](https://apify.com/fecklesspleb/remote-jobs-aggregator) — Remote OK and Jobicy listings in one deduplicated feed, which the free script does not read. Pay per event, $0.001 per job ($1.00 per 1,000 jobs).
+
 ## License
 
 MIT
